@@ -1,4 +1,4 @@
-package com.android.ifnewshub.api;
+package com.android.ifnewshub.service;
 
 import com.android.ifnewshub.model.News;
 

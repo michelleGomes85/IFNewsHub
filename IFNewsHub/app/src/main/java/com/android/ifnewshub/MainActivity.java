@@ -1,6 +1,7 @@
 package com.android.ifnewshub;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
@@ -16,7 +17,7 @@ import com.android.ifnewshub.api.NewsApi;
 import com.android.ifnewshub.cache.NewsCache;
 import com.android.ifnewshub.model.News;
 import com.android.ifnewshub.utils.AssetUtil;
-import com.android.ifnewshub.utils.ConfigUtils;
+import com.android.ifnewshub.service.ConfigUtils;
 import com.android.ifnewshub.utils.HtmlBuilder;
 import com.android.ifnewshub.utils.JsonUtils;
 
@@ -33,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private WebView webView;
     private String htmlBase;
     private NewsCache newsCache;
+
+    private List<News> lastNewsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void renderNews(List<News> list) {
-
+        lastNewsList = list;
         String newsCards = HtmlBuilder.buildNewsCards(list);
         String htmlFinal = htmlBase
                 .replace("{{news_cards}}", newsCards)
@@ -112,6 +115,19 @@ public class MainActivity extends AppCompatActivity {
                 "utf-8",
                 null
         );
+    }
+
+
+    private News findNewsById(String id) {
+
+        if (lastNewsList == null)
+            return null;
+
+        for (News n : lastNewsList)
+            if (n.getId().equals(id))
+                return n;
+
+        return null;
     }
 
     private void loadHtmlTemplate() {
@@ -133,8 +149,26 @@ public class MainActivity extends AppCompatActivity {
         WebView.setWebContentsDebuggingEnabled(true);
     }
 
+    // Métodos expostos ao JavaScript
     @JavascriptInterface
     public void updateNews() {
         fetchAndCacheNews(true);
+    }
+
+    @JavascriptInterface
+    public void openNewsById(String id) {
+
+        News found = findNewsById(id);
+
+        if (found == null) {
+            Toast.makeText(this, "Notícia não encontrada", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String json = JsonUtils.newsToJson(found);
+
+        Intent intent = new Intent(this, NewsDetailsActivity.class);
+        intent.putExtra("news_json", json);
+        startActivity(intent);
     }
 }

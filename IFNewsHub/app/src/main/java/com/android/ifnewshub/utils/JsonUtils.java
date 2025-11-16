@@ -31,4 +31,12 @@ public class JsonUtils {
             throw new RuntimeException("Erro ao converter JSONArray para lista", e);
         }
     }
+
+    public static News jsonToNews(String json) {
+        return gson.fromJson(json, News.class);
+    }
+
+    public static String newsToJson(News n) {
+        return gson.toJson(n);
+    }
 }

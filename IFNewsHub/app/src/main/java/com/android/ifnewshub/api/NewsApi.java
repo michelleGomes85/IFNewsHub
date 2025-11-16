@@ -1,7 +1,8 @@
 package com.android.ifnewshub.api;
 
 import com.android.ifnewshub.model.News;
-import com.android.ifnewshub.utils.ConfigUtils;
+import com.android.ifnewshub.service.ApiService;
+import com.android.ifnewshub.service.ConfigUtils;
 
 import java.util.List;
 import retrofit2.Retrofit;

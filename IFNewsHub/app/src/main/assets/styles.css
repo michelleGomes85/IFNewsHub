@@ -98,6 +98,8 @@ body {
     margin-bottom: 10px;
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    pointer-events: auto;
 }
 
 .news-card h3 {
@@ -105,8 +107,43 @@ body {
     font-size: 17px;
 }
 
-.news-card p {
-    margin: 0;
-    font-size: 14px;
+.content-new {
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.content-new h1 {
+    margin: 0 0 6px;
+    font-size: 1.2rem;
+}
+
+p.news-description {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    line-height: 1.5;
     opacity: 0.8;
+}
+
+.news-title a {
+    text-decoration: none;
+    color: #222;
+}
+
+.news-title a:hover {
+    color: #006837;
+}
+
+.tags-area {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-chip {
+    background: #e6f4ea;
+    color: #006837;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
 }

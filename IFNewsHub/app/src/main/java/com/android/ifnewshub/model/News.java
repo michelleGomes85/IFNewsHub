@@ -2,8 +2,11 @@ package com.android.ifnewshub.model;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
+import java.util.UUID;
 
 public class News {
+
+    private final String id = UUID.randomUUID().toString();
 
     @SerializedName("titulo")
     private String title;
@@ -19,6 +22,10 @@ public class News {
 
     @SerializedName("tags")
     private List<String> tags;
+
+    public String getId() {
+        return id;
+    }
 
     public String getTitle() {
         return title;

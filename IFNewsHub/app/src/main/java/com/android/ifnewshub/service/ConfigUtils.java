@@ -1,4 +1,4 @@
-package com.android.ifnewshub.utils;
+package com.android.ifnewshub.service;
 
 public interface ConfigUtils {
 

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IF News Hub</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+    <header class="topo">
+        <img class="logo" src="./images/if_nav.png" alt="IF Logo" />
+        <div class="title-area">
+            <h1 class="title">IF News Hub</h1>
+            <p class="subtitle">Notícias do IF Sudeste MG</p>
+        </div>
+    </header>
+
+    <section class="actions">
+        <button id="btn-back">Voltar</button>
+    </section>
+
+    <main class="content">
+        <div class="content-new">
+            <h1 class="news-title">
+                <a href="{{link}}" target="_blank" rel="noopener noreferrer">
+                    {{title}}
+                </a>
+            </h1>
+
+            <p class="news-description">{{description}}</p>
+
+            <div class="tags-area">
+                {{tags}}
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Portal experimental • IF Sudeste MG</p>
+    </footer>
+</body>
+
+<script src="scripts.js"></script>
+
+</html>

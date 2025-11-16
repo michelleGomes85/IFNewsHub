@@ -5,3 +5,12 @@ if (buttonUpdate) {
         Android.updateNews();
     });
 }
+
+const buttonBack = document.getElementById("btn-back"); 
+
+if (buttonBack) {
+    buttonBack.addEventListener('click', function(event) {
+        Android.closePage();
+    });
+}
+

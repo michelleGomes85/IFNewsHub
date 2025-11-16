@@ -10,8 +10,10 @@ public class HtmlBuilder {
         StringBuilder html = new StringBuilder();
 
         for (News n : list) {
-            html.append("<div class='news-card'>")
-                    .append("<h3>").append(HtmlBuilder.formatTitle(n.getTitle())).append("</h3>")
+            html.append("<div class='news-card' onclick=\"Android.openNewsById('")
+                    .append(n.getId())
+                    .append("')\">")
+                    .append("<h3>").append(formatTitle(n.getTitle())).append("</h3>")
                     .append("</div>");
         }
 
