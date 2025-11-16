@@ -65,12 +65,17 @@ body {
 }
 
 /* BARRA DE AÇÕES */
-.actions {
+.actions, .update {
     background: #ffffffcc;
     padding: 25px 35px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.update {
+    border-bottom: 1px solid #e4e4e4;
+    padding-bottom: 20px;
 }
 
 .actions button {
