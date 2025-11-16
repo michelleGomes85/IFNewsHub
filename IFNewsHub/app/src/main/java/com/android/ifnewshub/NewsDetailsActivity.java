@@ -284,8 +284,6 @@ public class NewsDetailsActivity extends AppCompatActivity {
         Log.d("NewsDetails", "Cache salvo para newsLink: " + newsLink);
     }
 
-
-
     // ---------------------------------------------------------
     // Segurança
     // ---------------------------------------------------------

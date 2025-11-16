@@ -67,12 +67,14 @@
         <ul class="collapsible">
             <li class="active">
                 <div class="collapsible-header">
-                    <i class="material-icons">article</i>
+                    <i class="material-icons">smart_toy</i>
                     Resumo gerado por IA
                 </div>
                 <div class="collapsible-body">
                     <div id="full-content" class="news-content">
-                        <p>Gerando resumo...</p>
+                        <div class="loader-dots">
+                            <span></span><span></span><span></span>
+                        </div>
                     </div>
                 </div>
             </li>
@@ -87,6 +89,8 @@
 
     <!-- MATERIALIZE JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
 
     <!-- Scripts locais -->
     <script src="scripts.js"></script>
