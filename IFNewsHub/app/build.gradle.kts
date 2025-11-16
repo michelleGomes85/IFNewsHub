@@ -1,3 +1,11 @@
+import java.util.Properties
+
+val localProps = Properties()
+val localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localProps.load(localPropsFile.inputStream())
+}
+
 plugins {
     alias(libs.plugins.android.application)
 }
@@ -5,6 +13,10 @@ plugins {
 android {
     namespace = "com.android.ifnewshub"
     compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.android.ifnewshub"
@@ -14,6 +26,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "GEMINI_API_KEY", "\"${localProps.getProperty("GEMINI_API_KEY")}\"")
     }
 
     buildTypes {
@@ -42,5 +55,5 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
 }

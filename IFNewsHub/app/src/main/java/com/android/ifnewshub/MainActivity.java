@@ -3,7 +3,6 @@ package com.android.ifnewshub;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -48,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
                 ConfigUtils.CACHE_EXPIRATION
         );
 
+        newsCache.clearAllCache(this);
         configWebView();
         loadHtmlTemplate();
         loadNewsWithCache();
@@ -61,11 +61,11 @@ public class MainActivity extends AppCompatActivity {
             List<News> newsList = JsonUtils.jsonArrayToNewsList(cached);
             renderNews(newsList);
         } else {
-            fetchAndCacheNews(true);
+            fetchAndCacheNews();
         }
     }
 
-    private void fetchAndCacheNews(boolean updateUI) {
+    private void fetchAndCacheNews() {
 
         NewsApi api = new NewsApi();
 
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
 
                 newsCache.saveCacheIfValid(MainActivity.this, newsList);
 
-                if (updateUI || webView.getContentHeight() == 0)
+                if (webView.getContentHeight() == 0)
                     renderNews(newsList);
             }
 
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     // Métodos expostos ao JavaScript
     @JavascriptInterface
     public void updateNews() {
-        fetchAndCacheNews(true);
+        fetchAndCacheNews();
     }
 
     @JavascriptInterface

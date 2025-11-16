@@ -181,3 +181,8 @@ nav,
 .sidenav {
     box-shadow: none;
 }
+
+.list-ol {
+    padding-left: 20px; 
+    line-height:1.6;
+}

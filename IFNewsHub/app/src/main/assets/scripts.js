@@ -22,7 +22,21 @@ if (buttonBack) {
 function updateFullContent(content) {
     const area = document.getElementById("full-content");
     if (!area) return;
-    area.innerHTML = content;
+
+    // Substitui cada linha que começa com número + ponto
+    const listItems = content.split('\n').map(line => {
+        const match = line.match(/^\s*(\d+)\.\s*(.+)$/);
+        if (match) {
+            return `<li>${match[2]}</li>`;
+        }
+        return line; // Mantém linhas que não começam com número
+    });
+
+    // Junta itens como lista ordenada
+    const html = `<ol>${listItems.join('')}</ol>`;
+
+    area.innerHTML = html;
 }
+
 
 

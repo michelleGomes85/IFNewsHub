@@ -23,6 +23,8 @@ public class News {
     @SerializedName("tags")
     private List<String> tags;
 
+    private String summaryIA;
+
     public String getId() {
         return id;
     }
@@ -65,5 +67,13 @@ public class News {
 
     public void setTags(List<String> tags) {
         this.tags = tags;
+    }
+
+    public String getSummaryIA() {
+        return summaryIA;
+    }
+
+    public void setSummaryIA(String summaryIA) {
+        this.summaryIA = summaryIA;
     }
 }

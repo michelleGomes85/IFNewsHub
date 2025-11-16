@@ -6,19 +6,16 @@ import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.ifnewshub.api.NewsApi;
 import com.android.ifnewshub.cache.NewsCache;
+import com.android.ifnewshub.ia.GeminiHelper;
 import com.android.ifnewshub.model.News;
 import com.android.ifnewshub.utils.AssetUtil;
 import com.android.ifnewshub.utils.JsonUtils;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,11 +25,12 @@ public class NewsDetailsActivity extends AppCompatActivity {
 
     private WebView webView;
     private News news;
+
     private NewsCache cache;
 
     private boolean cachePending = false;
 
-    private String cachedContent = null;
+    private String cachedSummary = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +38,9 @@ public class NewsDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_news_detail);
 
         initCache();
+
+        cache.clearAllCache(this);
+
         loadNewsFromIntent();
         initWebView();
         loadInitialHtml();
@@ -78,10 +79,10 @@ public class NewsDetailsActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
 
-                if (cachePending && cachedContent != null) {
-                    injectFullContent(cachedContent);
+                if (cachePending && cachedSummary != null) {
+                    injectFullContent(cachedSummary);
                     cachePending = false;
-                    cachedContent = null;
+                    cachedSummary = null;
                 }
             }
         });
@@ -137,12 +138,14 @@ public class NewsDetailsActivity extends AppCompatActivity {
     private void fetchFullContentAsync() {
 
         // Verifica se já existe conteúdo no cache
-        String cached = getCachedContent(news.getLink());
-        if (cached != null) {
-            cachedContent = cached;
+        String cachedSummary = getCachedContent(news.getLink());
+        if (cachedSummary != null) {
+            this.cachedSummary = cachedSummary;
             cachePending = true;
             return;
         }
+
+        fetchFullNewsContent(news.getLink());
 
         // Senão, busca conteúdo completo via API
         NewsApi api = new NewsApi();
@@ -153,8 +156,8 @@ public class NewsDetailsActivity extends AppCompatActivity {
 
                 String fullText = response.body().getContent();
                 if (fullText != null && !fullText.isEmpty()) {
-                    saveCachedContent(news.getLink(), fullText);
-                    injectFullContent(fullText);
+                    saveCachedSummary(news.getLink(), null, fullText);
+                    processContentWithGemini(news.getLink(), fullText);
                 }
             }
 
@@ -165,6 +168,76 @@ public class NewsDetailsActivity extends AppCompatActivity {
         });
     }
 
+    // --------------------------
+    // Passo 1: Buscar conteúdo completo da API
+    // --------------------------
+    private void fetchFullNewsContent(String newsLink) {
+        NewsApi api = new NewsApi();
+        api.getNewsContent(newsLink).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<News> call, @NonNull Response<News> response) {
+                if (!response.isSuccessful() || response.body() == null)
+                    return;
+
+                String fullText = response.body().getContent();
+                if (fullText != null && !fullText.isEmpty()) {
+                    processContentWithGemini(newsLink, fullText);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<News> call, @NonNull Throwable t) {
+                Log.e("NewsDetails", "Erro API conteúdo", t);
+            }
+        });
+    }
+
+    // --------------------------
+    // Passo 2: Enviar conteúdo para Gemini e gerar resumo
+    // --------------------------
+    private void processContentWithGemini(String newsLink, String fullText) {
+        new Thread(() -> {
+            try {
+                String prompt = buildGeminiPrompt(fullText);
+                String summary = GeminiHelper.askGemini(prompt);
+
+                runOnUiThread(() -> {
+                    saveCachedSummary(newsLink, fullText, summary);
+                    cachedSummary = summary;
+                    cachePending = true;
+
+                    if (webView.getContentHeight() > 0) {
+                        injectFullContent(summary);
+                        cachePending = false;
+                        cachedSummary = null;
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("NewsDetails", "Erro ao gerar resumo Gemini", e);
+            }
+        }).start();
+    }
+
+    // --------------------------
+    // Passo 3: Construir prompt para Gemini
+    // --------------------------
+    private String buildGeminiPrompt(String fullText) {
+        return "Com base no texto da notícia abaixo, elabore um resumo conciso estruturado em **3 tópicos numerados**, seguindo estas regras:\n\n" +
+                "- Cada tópico deve ter um **título curto e informativo** que funcione como subtítulo.\n" +
+                "- Cada tópico deve conter **uma ou duas frases completas**, que expressem claramente uma ideia central e relevante da notícia, incluindo detalhes importantes do texto.\n" +
+                "- Os tópicos devem formar um **fluxo lógico** e coerente: contexto → desenvolvimento → impacto ou conclusão.\n" +
+                "- **Não invente informações, números, nomes ou eventos** que não estejam presentes na notícia.\n" +
+                "- Evite frases soltas, genéricas ou superficiais. Cada frase deve agregar valor ao entendimento da notícia.\n" +
+                "- Sempre que possível, use palavras de ligação para criar **transição natural entre os tópicos**.\n\n" +
+                "Formato de saída exigido (Markdown, **apenas isso**, sem explicações adicionais):\n\n" +
+                "1. Título do tópico 1\n" +
+                "   - Frase(s) explicativa(s) conectando contexto e ideia principal\n" +
+                "2. Título do tópico 2\n" +
+                "   - Frase(s) explicativa(s) desenvolvendo a notícia e conectando com o próximo ponto\n" +
+                "3. Título do tópico 3\n" +
+                "   - Frase(s) explicativa(s) mostrando impacto, conclusão ou desdobramento\n\n" +
+                "Notícia:\n" + fullText;
+    }
 
     // ---------------------------------------------------------
     // Injeta conteúdo completo no WebView (chamada JS)
@@ -195,7 +268,7 @@ public class NewsDetailsActivity extends AppCompatActivity {
     // ---------------------------------------------------------
     // Salva conteúdo completo da notícia no cache
     // ---------------------------------------------------------
-    private void saveCachedContent(String newsLink, String content) {
+    private void saveCachedSummary(String newsLink, String summary, String content) {
         if (news == null) return;
 
         // Cria uma nova notícia para atualizar apenas o conteúdo
@@ -204,9 +277,10 @@ public class NewsDetailsActivity extends AppCompatActivity {
         updated.setTitle(news.getTitle());
         updated.setDescription(news.getDescription());
         updated.setContent(content);
+        updated.setSummaryIA(summary);
         updated.setTags(news.getTags());
 
-        cache.updateNews(this, updated); // Salva notícia individualmente no cache
+        cache.updateNews(this, updated);
         Log.d("NewsDetails", "Cache salvo para newsLink: " + newsLink);
     }
 

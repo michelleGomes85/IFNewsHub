@@ -150,4 +150,9 @@ public class NewsCache {
         if (timestamp == 0) return true;
         return System.currentTimeMillis() - timestamp >= expirationMillis;
     }
+
+    public void clearAllCache(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        prefs.edit().clear().apply();
+    }
 }
