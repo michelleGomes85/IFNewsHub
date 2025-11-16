@@ -4,110 +4,150 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.android.ifnewshub.model.News;
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-/**
- * Classe de cache genérico para armazenar e recuperar JSONs
- * com expiração definida pelo usuário.
- */
+import java.util.List;
+
 public class NewsCache {
 
     private final String prefName;
-    private final String keyData;
-    private final String keyTimestamp;
     private final long expirationMillis;
+    private final Gson gson = new Gson();
+    private final String globalTimestampKey = "_last_update_global";
 
-    /**
-     * Cria o cache
-     *
-     * @param prefName Nome do SharedPreferences
-     * @param keyData Chave para armazenar os dados
-     * @param expirationMillis Tempo de expiração em milissegundos
-     */
-    public NewsCache(String prefName, String keyData, long expirationMillis) {
+    public NewsCache(String prefName, long expirationMillis) {
         this.prefName = prefName;
-        this.keyData = keyData;
-        this.keyTimestamp = keyData + "_timestamp";
         this.expirationMillis = expirationMillis;
     }
 
     /**
-     * Retorna os dados do cache se válidos, ou null caso contrário
-     * */
-    public JSONArray getCachedData(Context context) {
+     * Salva lista de notícias (mantendo compatibilidade)
+     */
+    public void saveCacheIfValid(Context context, List<News> newsList) {
+        if (newsList == null || newsList.isEmpty()) return;
+
         SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-        long savedTime = prefs.getLong(keyTimestamp, 0);
+        SharedPreferences.Editor editor = prefs.edit();
+        long now = System.currentTimeMillis();
 
-        if (!isValid(savedTime)) {
-            clearCache(context);
-            return null;
+        for (News news : newsList) {
+            if (news.getLink() == null) continue;
+
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("data", new JSONObject(gson.toJson(news)));
+                obj.put("timestamp", now);
+            } catch (JSONException e) {
+                Log.e("NewsCache", "Erro ao salvar notícia: " + news.getLink(), e);
+                continue;
+            }
+
+            editor.putString(news.getLink(), obj.toString());
         }
 
-        String json = prefs.getString(keyData, null);
-        if (json == null) return null;
-
-        try {
-            return new JSONArray(json);
-        } catch (JSONException e) {
-            Log.e("Cache", "Erro ao ler cache", e);
-            return null;
-        }
+        // Atualiza o timestamp global
+        editor.putLong(globalTimestampKey, now);
+        editor.apply();
     }
 
     /**
-     * Salva os dados no cache SOMENTE se forem válidos (não nulos/vazios),
-     * e atualiza o timestamp para o momento atual.
+     * Retorna todas as notícias válidas como JSONArray
      */
-    public void saveCacheIfValid(Context context, JSONArray data) {
-        if (data == null || data.length() == 0) {
-            Log.w("NewsCache", "Tentativa de salvar cache inválido (nulo ou vazio). Ignorando.");
+    public JSONArray getCachedData(Context context) {
+        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        JSONArray result = new JSONArray();
+
+        for (String key : prefs.getAll().keySet()) {
+            if (key.equals(globalTimestampKey)) continue; // Ignora timestamp global
+            String value = prefs.getString(key, null);
+            if (value == null) continue;
+
+            try {
+                JSONObject obj = new JSONObject(value);
+                long timestamp = obj.getLong("timestamp");
+
+                if (isValid(timestamp)) {
+                    prefs.edit().remove(key).apply();
+                    continue;
+                }
+
+                result.put(obj.getJSONObject("data"));
+            } catch (JSONException e) {
+                Log.e("NewsCache", "Erro ao ler cache da notícia: " + key, e);
+            }
+        }
+
+        return result.length() > 0 ? result : null;
+    }
+
+    /**
+     * Atualiza ou adiciona uma notícia específica
+     */
+    public void updateNews(Context context, News news) {
+        if (news.getLink() == null) return;
+
+        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("data", new JSONObject(gson.toJson(news)));
+            obj.put("timestamp", System.currentTimeMillis());
+        } catch (JSONException e) {
+            Log.e("NewsCache", "Erro ao atualizar notícia: " + news.getLink(), e);
             return;
         }
 
-        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-        prefs.edit()
-                .putString(keyData, data.toString())
-                .putLong(keyTimestamp, System.currentTimeMillis())
+        prefs.edit().putString(news.getLink(), obj.toString())
+                .putLong(globalTimestampKey, System.currentTimeMillis()) // atualiza global
                 .apply();
-
-        Log.d("NewsCache", "Cache atualizado com " + data.length() + " itens.");
     }
 
+    /**
+     * Recupera uma notícia específica
+     */
+    public News getNews(Context context, String link) {
+        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+        String value = prefs.getString(link, null);
+        if (value == null) return null;
+
+        try {
+            JSONObject obj = new JSONObject(value);
+            long timestamp = obj.getLong("timestamp");
+
+            if (isValid(timestamp)) {
+                prefs.edit().remove(link).apply();
+                return null;
+            }
+
+            JSONObject data = obj.getJSONObject("data");
+            return gson.fromJson(data.toString(), News.class);
+
+        } catch (JSONException e) {
+            Log.e("NewsCache", "Erro ao recuperar notícia: " + link, e);
+            return null;
+        }
+    }
 
     /**
-     * Retorna a data/hora da última atualização bem-sucedida (em millis).
-     * @return timestamp da última atualização válida, ou 0 se nunca foi atualizado.
+     * Última atualização global
      */
     public long getLastUpdate(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-
-        // 0 = nunca atualizado com sucesso
-        return prefs.getLong(keyTimestamp, 0);
+        return prefs.getLong(globalTimestampKey, 0);
     }
 
     public String getLastUpdateFormat(Context context, String format) {
         long ts = getLastUpdate(context);
-        if (ts == 0)
-            return "Nunca";
-
+        if (ts == 0) return "Nunca";
         return android.text.format.DateFormat.format(format, ts).toString();
     }
 
-    /**
-     * Limpa o cache manualmente
-     */
-    public void clearCache(Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-        prefs.edit().remove(keyData).remove(keyTimestamp).apply();
-    }
-
-    /**
-     * Verifica se o cache ainda é válido
-     * */
-    private boolean isValid(long savedTime) {
-        if (savedTime == 0) return false;
-        long diff = System.currentTimeMillis() - savedTime;
-        return diff < expirationMillis;
+    private boolean isValid(long timestamp) {
+        if (timestamp == 0) return true;
+        return System.currentTimeMillis() - timestamp >= expirationMillis;
     }
 }

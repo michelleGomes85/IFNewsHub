@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         // Inicializa o cache
         newsCache = new NewsCache(
                 "news_cache",
-                "news_data",
                 ConfigUtils.CACHE_EXPIRATION
         );
 
@@ -58,11 +57,9 @@ public class MainActivity extends AppCompatActivity {
 
         JSONArray cached = newsCache.getCachedData(this);
         if (cached != null) {
-            Log.d(ConfigUtils.TAG, "Cache válido encontrado");
+            Toast.makeText(this, "Cache encontrado", Toast.LENGTH_SHORT).show();
             List<News> newsList = JsonUtils.jsonArrayToNewsList(cached);
             renderNews(newsList);
-
-            fetchAndCacheNews(false);
         } else {
             fetchAndCacheNews(true);
         }
@@ -82,15 +79,10 @@ public class MainActivity extends AppCompatActivity {
 
                 List<News> newsList = response.body();
 
-                JSONArray jsonArray = JsonUtils.newsListToJsonArray(newsList);
+                newsCache.saveCacheIfValid(MainActivity.this, newsList);
 
-                if (updateUI) {
-                    newsCache.saveCacheIfValid(MainActivity.this, jsonArray);
-                }
-
-                if (updateUI || webView.getContentHeight() == 0) {
+                if (updateUI || webView.getContentHeight() == 0)
                     renderNews(newsList);
-                }
             }
 
             @Override
@@ -116,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
                 null
         );
     }
-
 
     private News findNewsById(String id) {
 

@@ -46,4 +46,24 @@ public class News {
     public List<String> getTags() {
         return tags;
     }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 }
