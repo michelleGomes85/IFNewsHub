@@ -20,6 +20,7 @@ app = Flask(__name__)
 #       "tags": ["tag1", "tag2"]
 #   }, ...
 # ]
+
 # Erros possíveis:
 #   500 Internal Server Error -> falha ao buscar ou processar notícias
 # =========================================
@@ -64,6 +65,7 @@ def noticias():
             })
 
         return jsonify(noticias_lista)
+        
 
     except Exception as e:
         print("Erro geral:", e)

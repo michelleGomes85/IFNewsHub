@@ -2,6 +2,7 @@ package com.android.ifnewshub;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -33,10 +34,10 @@ public class MainActivity extends AppCompatActivity {
 
         configWebView();
         loadHtmlTemplate();
-        apiFlask();
+        getNewsFlask();
     }
 
-    private void apiFlask() {
+    private void getNewsFlask() {
         NewsApi api = new NewsApi();
 
         api.listNews().enqueue(new Callback<>() {
@@ -72,8 +73,6 @@ public class MainActivity extends AppCompatActivity {
                 null
         );
     }
-
-
     private void loadHtmlTemplate() {
         htmlBase = AssetUtil.readAsset(this, "home_template.html");
     }
@@ -87,8 +86,14 @@ public class MainActivity extends AppCompatActivity {
         webView = findViewById(R.id.webview);
         WebSettings ws = webView.getSettings();
         ws.setJavaScriptEnabled(true);
+        webView.addJavascriptInterface(this, "Android");
 
         webView.setWebViewClient(new WebViewClient());
         WebView.setWebContentsDebuggingEnabled(true);
+    }
+
+    @JavascriptInterface
+    public void updateNews() {
+        getNewsFlask();
     }
 }
