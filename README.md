@@ -2,7 +2,11 @@
 
 Aplicativo que consome notícias do **IF Sudeste MG** via API Flask e gera resumos concisos por inteligência artificial, apresentando os principais pontos de cada notícia de forma clara e interativa.
 
-<img src="assets/app_design.gif" alt="App Preview" width="300"/>
+<div align="center">
+  <img src="assets/image_design.png" alt="App Screenshot" width="300" style="display: inline-block;"/>
+  <img src="assets/app_design.gif" alt="App GIF" width="300" style="display: inline-block; margin-right: 10px;"/>
+</div>
+
 
 ---
 
