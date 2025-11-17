@@ -2,21 +2,25 @@
 
 Aplicativo que consome notícias do **IF Sudeste MG** via API Flask e gera resumos concisos por inteligência artificial, apresentando os principais pontos de cada notícia de forma clara e interativa.
 
+<img src="assets/app_design.gif" alt="App Preview" width="300"/>
+
 ---
 
 ## 📌 Descrição do Projeto
 
-O **IF News Hub** é um projeto que combina:
+O **IF News Hub** combina backend, frontend e IA para fornecer uma experiência completa de leitura de notícias:
 
-- **Backend:** API construída com **Flask**, responsável por coletar e disponibilizar as notícias oficiais do IF Sudeste MG.
+- **Backend:** API construída com **Flask**, responsável por coletar e disponibilizar notícias oficiais do IF Sudeste MG.
 - **Frontend / App Android:** Interface que consome a API, mostrando título, descrição, tags e resumo gerado por IA.
 - **Resumo por IA:** Cada notícia é enviada para um modelo de inteligência artificial (ex: Gemini), que gera um resumo em tópicos numerados, conectando contexto, desenvolvimento e impacto/conclusão.
-- **Experiência interativa:** Enquanto o resumo é gerado, o usuário vê uma animação de carregamento. Quando pronto, o resumo aparece com efeito de digitação, simulando a escrita da IA.
-- **Cache local:** Resumos gerados são armazenados no dispositivo para evitar chamadas repetidas à API e melhorar a performance.
+- **Experiência interativa:** Loader animado enquanto o resumo é gerado e efeito de digitação simulando a escrita da IA.
+- **Cache local:** Resumos armazenados no dispositivo para evitar chamadas repetidas à API e melhorar a performance.
 
 ---
 
 ## 🏗 Estrutura do Projeto
+
+
 
 ```
 IFNewsHub/
